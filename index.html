@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="./font-awesome-4.7.0/css/font-awesome.min.css"
+    />
+    <title>JS Final Project</title>
+  </head>
+  <body>
+    <table class="table__user">
+      <tbody class="table__user--body">
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email Address</th>
+          <th>Address</th>
+          <th>Edit</th>
+        </tr>
+        <tr class="newUser">
+          <td>
+            <button class="btn--add">
+              <i class="fa fa-plus-circle" aria-hidden="true"></i>
+            </button>
+          </td>
+          <td><input type="text" class="newName disabled" required /></td>
+          <td><input type="email" class="newEmail disabled" required /></td>
+          <td><input type="text" class="newAddress disabled" required /></td>
+          <td class="buttons">
+            <button class="btn--save disabled">
+              <i class="fa fa-floppy-o" aria-hidden="true"></i></button
+            ><button class="btn--clear disabled">
+              <i class="fa fa-times" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

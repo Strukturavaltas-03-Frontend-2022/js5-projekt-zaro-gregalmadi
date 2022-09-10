@@ -1,0 +1,103 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  color: white;
+  background-image: linear-gradient(
+    to top left,
+    rgb(95, 108, 187),
+    rgb(219, 218, 185)
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.table__user {
+  background-color: rgba(78, 82, 86, 0.733);
+  padding: 5px;
+
+  border-radius: 5px;
+  display: table;
+  text-align: center;
+}
+
+.user,
+td {
+  background-color: rgba(129, 129, 160, 0.499);
+}
+
+.user:hover {
+  background-color: rgba(214, 214, 220, 0.499);
+  color: black;
+}
+
+th {
+  background-color: rgba(120, 111, 97, 0.53);
+  padding: 5px;
+}
+
+td {
+  padding: 5px;
+}
+
+.buttons {
+  padding: 5px;
+}
+
+.btn--edit,
+.btn--delete,
+.btn--add,
+.btn--save,
+.btn--clear {
+  border: none;
+  color: white;
+  outline: none;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.btn--edit {
+  background-color: cornflowerblue;
+  border-radius: 5px 0 0 5px;
+}
+
+.btn--delete {
+  background-color: red;
+  border-radius: 0 5px 5px 0;
+}
+
+.btn--add {
+  border-radius: 50%;
+  background-color: green;
+}
+
+.btn--save {
+  background-color: rgb(219, 200, 32);
+  border-radius: 5px 0 0 5px;
+}
+
+.btn--clear {
+  background-color: rgb(168, 40, 40);
+  border-radius: 0 5px 5px 0;
+}
+
+.newUser > input {
+  border: none;
+  outline: none;
+}
+
+.disabled {
+  pointer-events: none;
+  background-color: grey;
+  cursor: none;
+}
