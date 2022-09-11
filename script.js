@@ -2,9 +2,10 @@
 
 import { fetchUserData, updateUserData, updateOptions } from "./fetch.js";
 import { validator } from "./validation.js";
+import { languageChanger } from "./languagePacks.js";
 
 // HTML selectors
-const userTable = document.querySelector(".table__user");
+const userTable = document.querySelector(".table__user--body");
 const addNewUserButton = document.querySelector(".btn--add");
 const addNewUserRow = document.querySelector(".newUser");
 const inputFields = document.querySelectorAll(".newUser input");
@@ -15,6 +16,11 @@ const modal = document.querySelector(".modal");
 const alertBox = document.querySelector(".alertBox");
 const alertHeader = document.querySelector(".alert__header");
 const alertContent = document.querySelector(".alert__content");
+
+const languageSetting = document.querySelector(".flag");
+
+const sortById = document.querySelector(".header__id");
+const sortByName = document.querySelector(".header__name");
 
 const newName = document.querySelector(".newName");
 const newEmail = document.querySelector(".newEmail");
@@ -30,6 +36,8 @@ let userData = [];
 let updateData = {};
 let editing = false;
 let valid = false;
+let en = true;
+let languagePack = languageChanger("hu");
 
 let editedUserID;
 let editedUserRow;
@@ -67,9 +75,9 @@ const generateEventListeners = (i) => {
     currentUserRow.remove();
 
     alertMessage(
-      "DELETE",
-      `Deleting user ${currentUserName} was successful!`,
-      "green"
+      languagePack[2].header,
+      languagePack[2].message,
+      languagePack[2].color
     );
 
     const userUniqueKey = userData.find(
@@ -108,6 +116,7 @@ const generateEventListeners = (i) => {
 
 // Adding new user logic
 addNewUserButton.addEventListener("click", () => {
+  editing = false;
   enableInputFields();
   toggleAllEditButtons();
   addNewUserButton.classList.add("disabled");
@@ -139,6 +148,7 @@ saveButton.addEventListener("click", () => {
     if (editing) {
       toggleAllEditButtons();
 
+      // Finding edited user
       const editedUser = userData.find((user) => user.id == editedUserID);
 
       // Updating userData
@@ -151,16 +161,22 @@ saveButton.addEventListener("click", () => {
       editedUserRow.children[2].innerHTML = emailAddress;
       editedUserRow.children[3].innerHTML = address;
 
-      alertMessage("EDIT", "Editing user was successful!", "green");
+      alertMessage(
+        languagePack[1].header,
+        languagePack[1].message,
+        languagePack[1].color
+      );
       // Updating backend server
       updateServerData(userData);
     }
     // If it's a new user request
     else {
+      // Generating unique key for new user
       const generateUniqueKey = `-ZBCe6ZZ${Math.trunc(
         Math.random() * 1000000000000
       )}`;
 
+      // Pushing new user into user array
       userData.push({
         uniqueKey: generateUniqueKey,
         id,
@@ -169,17 +185,26 @@ saveButton.addEventListener("click", () => {
         address,
       });
 
+      // Creating new user row
       const userRow = document.createElement("tr");
       userRow.classList.add("user");
       userTable.appendChild(userRow);
-      userRow.innerHTML = `<td class='user_id'>${id}</td> <td class='user_name'>${name}</td> <td class='user_email'>${emailAddress}</td> <td class='user_address'>${address}</td> <td class='buttons'><button class='btn--edit'><i class="fa fa-pencil" aria-hidden="true"></i></button><button class='btn--delete'><i class="fa fa-trash-o" aria-hidden="true"></i></button>
-    </td>`;
+      userRow.innerHTML = `
+      <td class='user_id'>${id}</td> <td class='user_name'>${name}</td> <td class='user_email'>${emailAddress}</td> <td class='user_address'>${address}</td> <td class='buttons'><button class='btn--edit disabled'><i class="fa fa-pencil" aria-hidden="true"></i></button><button class='btn--delete disabled'><i class="fa fa-trash-o" aria-hidden="true"></i></button></td>
+      `;
 
+      // Updating nodelists
+      deleteButtons = document.querySelectorAll(".btn--delete");
+      editButtons = document.querySelectorAll(".btn--edit");
       users = document.querySelectorAll(".user");
 
-      /*generateEventListeners(index);*/
-      alertMessage("CREATE", "Adding new user was successful!", "green");
-
+      generateEventListeners(users.length - 1);
+      alertMessage(
+        languagePack[0].header,
+        languagePack[0].message,
+        languagePack[0].color
+      );
+      toggleAllEditButtons();
       updateServerData(userData);
     }
 
@@ -189,9 +214,9 @@ saveButton.addEventListener("click", () => {
     addNewUserButton.classList.remove("disabled");
   } else {
     alertMessage(
-      "ERROR",
-      "One or more of your inputs do not match criteria!",
-      "red"
+      languagePack[3].header,
+      languagePack[3].message,
+      languagePack[3].color
     );
   }
 });
@@ -261,4 +286,84 @@ const alertMessage = (header, message, color) => {
     modal.classList.remove("fadeOut");
     modal.style.display = "none";
   }, 5000);
+};
+
+// Language selector with flag icon - it only affects alert messages
+languageSetting.addEventListener("click", () => {
+  if (en) {
+    languageSetting.setAttribute("src", "./assets/hu.png");
+    languagePack = languageChanger("en");
+    en = false;
+  } else {
+    languageSetting.setAttribute("src", "./assets/en.png");
+    languagePack = languageChanger("hu");
+    en = true;
+  }
+});
+
+// Sort by id, or name
+let ascID = true;
+let ascName = true;
+sortById.addEventListener("click", () => {
+  sortByName.innerHTML = "Name";
+  if (ascID) {
+    userData.sort((a, b) => b.id - a.id);
+    ascID = false;
+    sortById.innerHTML = "#";
+    sortById.insertAdjacentHTML(
+      "beforeend",
+      '<i class="fa fa-level-down" aria-hidden="true"></i>'
+    );
+  } else {
+    userData.sort((a, b) => a.id - b.id);
+    ascID = true;
+    sortById.innerHTML = "#";
+    sortById.insertAdjacentHTML(
+      "beforeend",
+      '<i class="fa fa-level-up" aria-hidden="true"></i>'
+    );
+  }
+
+  regenDOM();
+});
+
+sortByName.addEventListener("click", () => {
+  sortById.innerHTML = "#";
+  if (ascName) {
+    userData.sort((a, b) => {
+      let x = a.name.split(" ")[0];
+      let y = b.name.split(" ")[0];
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+    ascName = false;
+    sortByName.innerHTML = "Name";
+    sortByName.insertAdjacentHTML("beforeend", " (A-Z)");
+  } else {
+    userData.sort((a, b) => {
+      let x = a.name.split(" ")[0];
+      let y = b.name.split(" ")[0];
+      return x > y ? -1 : x < y ? 1 : 0;
+    });
+    ascName = true;
+    sortByName.innerHTML = "Name";
+    sortByName.insertAdjacentHTML("beforeend", " (Z-A)");
+  }
+
+  regenDOM();
+});
+
+// Rerender DOM for sorting
+const regenDOM = () => {
+  users = document.querySelectorAll(".user");
+  users.forEach((user) => {
+    user.remove();
+  });
+
+  userData.forEach((user) => {
+    const userRow = document.createElement("tr");
+    userRow.classList.add("user");
+    userTable.appendChild(userRow);
+    userRow.innerHTML = `<td class='user_id'>${user.id}</td> <td class='user_name'>${user.name}</td> <td class='user_email'>${user.emailAddress}</td> <td class='user_address'>${user.address}</td> <td class='buttons'><button class='btn--edit'><i class="fa fa-pencil" aria-hidden="true"></i></button><button class='btn--delete'><i class="fa fa-trash-o" aria-hidden="true"></i></button>
+    </td>`;
+  });
 };
