@@ -1,5 +1,8 @@
 "use strict";
 
+import { fetchUserData, updateUserData, updateOptions } from "./fetch.js";
+import { validator } from "./validation.js";
+
 // HTML selectors
 const userTable = document.querySelector(".table__user");
 const addNewUserButton = document.querySelector(".btn--add");
@@ -7,6 +10,11 @@ const addNewUserRow = document.querySelector(".newUser");
 const inputFields = document.querySelectorAll(".newUser input");
 const clearButton = document.querySelector(".btn--clear");
 const saveButton = document.querySelector(".btn--save");
+
+const modal = document.querySelector(".modal");
+const alertBox = document.querySelector(".alertBox");
+const alertHeader = document.querySelector(".alert__header");
+const alertContent = document.querySelector(".alert__content");
 
 const newName = document.querySelector(".newName");
 const newEmail = document.querySelector(".newEmail");
@@ -16,10 +24,12 @@ const newAddress = document.querySelector(".newAddress");
 let deleteButtons;
 let editButtons;
 let users;
+
+let createDOM;
 let userData = [];
 let updateData = {};
 let editing = false;
-let allGood = false;
+let valid = false;
 
 let editedUserID;
 let editedUserRow;
@@ -27,66 +37,24 @@ let editedUserRow;
 const url =
   "https://js5-zaroprojekt-default-rtdb.europe-west1.firebasedatabase.app/users.json";
 
-// Fetching data from the server
-const fetchUserData = async (url) => {
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+// Fetching data from the server and rendering DOM based on fetched data
+(createDOM = async () => {
+  userData = await fetchUserData(url);
 
-    const data = await response.json();
+  userData.forEach((user, i) => {
+    const userRow = document.createElement("tr");
+    userRow.classList.add("user");
+    userTable.appendChild(userRow);
+    userRow.innerHTML = `<td class='user_id'>${user.id}</td> <td class='user_name'>${user.name}</td> <td class='user_email'>${user.emailAddress}</td> <td class='user_address'>${user.address}</td> <td class='buttons'><button class='btn--edit'><i class="fa fa-pencil" aria-hidden="true"></i></button><button class='btn--delete'><i class="fa fa-trash-o" aria-hidden="true"></i></button>
+    </td>`;
 
-    for (const key in data) {
-      userData.push({
-        uniqueKey: key,
-        id: data[key].id,
-        name: data[key].name,
-        emailAddress: data[key].emailAddress,
-        address: data[key].address,
-      });
-    }
-  } catch (err) {
-    console.error(`Something went wrong fetching your request: ${err}`);
-  }
+    users = document.querySelectorAll(".user");
+    deleteButtons = document.querySelectorAll(".btn--delete");
+    editButtons = document.querySelectorAll(".btn--edit");
 
-  createDOM();
-};
-
-fetchUserData(url);
-
-// Sending POST requests to the server
-const updateUserData = async (url, uploadData) => {
-  try {
-    const response = await fetch(url, {
-      method: "PUT",
-      body: JSON.stringify(uploadData),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-    const data = await response.json();
-    console.log(data);
-  } catch (err) {
-    console.error(`Something went wrong fetching your request: ${err}`);
-  }
-};
-
-const deleteUserData = async (url) => {
-  try {
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-    const data = await response.json();
-    console.log(data);
-  } catch (err) {
-    console.error(`Something went wrong fetching your request: ${err}`);
-  }
-};
+    generateEventListeners(i);
+  });
+})();
 
 // Adding edit and delete logic for each data row
 const generateEventListeners = (i) => {
@@ -98,14 +66,22 @@ const generateEventListeners = (i) => {
   deleteButton.addEventListener("click", () => {
     currentUserRow.remove();
 
-    alert(`Deleting user ${currentUserName} was successful.`);
+    alertMessage(
+      "DELETE",
+      `Deleting user ${currentUserName} was successful!`,
+      "green"
+    );
 
     const userUniqueKey = userData.find(
       (user) => user.name === currentUserName
     ).uniqueKey;
 
-    deleteUserData(
-      `https://js5-zaroprojekt-default-rtdb.europe-west1.firebasedatabase.app/users/${userUniqueKey}.json`
+    updateOptions.body = "";
+    updateOptions.method = "DELETE";
+
+    updateUserData(
+      `https://js5-zaroprojekt-default-rtdb.europe-west1.firebasedatabase.app/users/${userUniqueKey}.json`,
+      updateOptions
     );
   });
 
@@ -127,23 +103,6 @@ const generateEventListeners = (i) => {
     clearButton.classList.remove("disabled");
     saveButton.classList.remove("disabled");
     addNewUserButton.classList.add("disabled");
-  });
-};
-
-// Rendering DOM based on fetched data
-const createDOM = () => {
-  userData.forEach((user, i) => {
-    const userRow = document.createElement("tr");
-    userRow.classList.add("user");
-    userTable.appendChild(userRow);
-    userRow.innerHTML = `<td class='user_id'>${user.id}</td> <td class='user_name'>${user.name}</td> <td class='user_email'>${user.emailAddress}</td> <td class='user_address'>${user.address}</td> <td class='buttons'><button class='btn--edit'><i class="fa fa-pencil" aria-hidden="true"></i></button><button class='btn--delete'><i class="fa fa-trash-o" aria-hidden="true"></i></button>
-    </td>`;
-
-    users = document.querySelectorAll(".user");
-    deleteButtons = document.querySelectorAll(".btn--delete");
-    editButtons = document.querySelectorAll(".btn--edit");
-
-    generateEventListeners(i);
   });
 };
 
@@ -172,13 +131,12 @@ saveButton.addEventListener("click", () => {
   const emailAddress = newEmail.value;
   const address = newAddress.value;
 
-  validator(name, emailAddress, address);
+  valid = validator(name, emailAddress, address, valid);
 
   // Validating - input matches criteria
-  if (allGood) {
+  if (valid) {
     // If it's and edit request
     if (editing) {
-      console.log("This is an editing request");
       toggleAllEditButtons();
 
       const editedUser = userData.find((user) => user.id == editedUserID);
@@ -193,22 +151,12 @@ saveButton.addEventListener("click", () => {
       editedUserRow.children[2].innerHTML = emailAddress;
       editedUserRow.children[3].innerHTML = address;
 
+      alertMessage("EDIT", "Editing user was successful!", "green");
       // Updating backend server
-      userData.forEach((user) => {
-        updateData[user.uniqueKey] = {
-          id: user.id,
-          name: user.name,
-          emailAddress: user.emailAddress,
-          address: user.address,
-        };
-      });
-
-      updateUserData(url, updateData);
+      updateServerData(userData);
     }
     // If it's a new user request
     else {
-      console.log("This is a new user request");
-
       const generateUniqueKey = `-ZBCe6ZZ${Math.trunc(
         Math.random() * 1000000000000
       )}`;
@@ -228,30 +176,24 @@ saveButton.addEventListener("click", () => {
     </td>`;
 
       users = document.querySelectorAll(".user");
-      const index = users.length - 1;
 
       /*generateEventListeners(index);*/
-      alert("Adding new user was successful!");
+      alertMessage("CREATE", "Adding new user was successful!", "green");
 
-      userData.forEach((user) => {
-        updateData[user.uniqueKey] = {
-          id: user.id,
-          name: user.name,
-          emailAddress: user.emailAddress,
-          address: user.address,
-        };
-      });
-
-      updateUserData(url, updateData);
+      updateServerData(userData);
     }
-  } else {
-    throw new Error("One or more of your inputs do not match criteria!");
-  }
 
-  resetInputFields();
-  clearButton.classList.add("disabled");
-  saveButton.classList.add("disabled");
-  addNewUserButton.classList.remove("disabled");
+    resetInputFields();
+    clearButton.classList.add("disabled");
+    saveButton.classList.add("disabled");
+    addNewUserButton.classList.remove("disabled");
+  } else {
+    alertMessage(
+      "ERROR",
+      "One or more of your inputs do not match criteria!",
+      "red"
+    );
+  }
 });
 
 // Enables all input fields for adding new users or editing existing ones
@@ -280,24 +222,43 @@ const toggleAllEditButtons = () => {
   });
 };
 
-// Name, email and address validation
-const validator = (name, email, address) => {
-  allGood = false;
+// Updating package and uploading to server
+const updateServerData = (userData) => {
+  userData.forEach((user) => {
+    updateData[user.uniqueKey] = {
+      id: user.id,
+      name: user.name,
+      emailAddress: user.emailAddress,
+      address: user.address,
+    };
+  });
 
-  const nameRegExp = /^(?=.{5,30}$)[a-záéíóúöőáüűé\-\s]+$/i;
-  const emailRegExp = /\S+@\S+\.\S+/i;
-  const addressRegExp = /\w\s\w/i;
+  updateOptions.method = "PUT";
+  updateOptions.body = JSON.stringify(updateData);
+  updateUserData(url, updateOptions);
+};
 
-  const nameMatch = String(name).toLowerCase().match(nameRegExp);
-  const emailMatch = String(email).toLowerCase().match(emailRegExp);
-  const addressMatch = String(address).toLowerCase().match(addressRegExp);
+// Alerting update and error messages
+const alertMessage = (header, message, color) => {
+  modal.style.display = "flex";
+  modal.classList.add("fadeIn");
+  alertBox.style.borderColor = color;
+  alertHeader.innerHTML = header;
+  alertContent.innerHTML = message;
 
-  if (!nameMatch || !emailMatch || !addressMatch) {
-    alert("Input fields do not match criteria!");
-  } else {
-    alert("ready to go");
-    allGood = true;
-  }
+  setTimeout(() => {
+    clearTimeout();
+    modal.classList.remove("fadeIn");
+  }, 1000);
 
-  return allGood;
+  setTimeout(() => {
+    clearTimeout();
+    modal.classList.add("fadeOut");
+  }, 4000);
+
+  setTimeout(() => {
+    clearTimeout();
+    modal.classList.remove("fadeOut");
+    modal.style.display = "none";
+  }, 5000);
 };

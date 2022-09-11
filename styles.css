@@ -101,3 +101,47 @@ td {
   background-color: grey;
   cursor: none;
 }
+
+.modal {
+  position: fixed;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.542);
+  z-index: 1;
+}
+
+.alertBox {
+  display: flex;
+  flex-direction: column;
+  width: 350px;
+  height: 100px;
+  text-align: center;
+  background-color: rgba(124, 124, 124, 0.855);
+  border: 2px solid rgb(128, 0, 0);
+  z-index: 1;
+}
+
+.alert__header {
+  align-self: flex-start;
+  padding: 20px;
+}
+
+.fadeIn {
+  animation: alertFade 1s forwards normal;
+}
+
+.fadeOut {
+  animation: alertFade 1s forwards reverse;
+}
+
+@keyframes alertFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
