@@ -100,9 +100,10 @@ td.user_email {
   border-radius: 0 5px 5px 0;
 }
 
-.newUser > input {
+.newUser input {
   border: none;
   outline: none;
+  padding: 3px;
 }
 
 .header__id,
@@ -118,6 +119,10 @@ td.user_email {
   gap: 5px;
   right: 10px;
   top: 10px;
+}
+
+.flag {
+  cursor: pointer;
 }
 
 .disabled {
