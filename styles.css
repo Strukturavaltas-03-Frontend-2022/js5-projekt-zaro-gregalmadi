@@ -131,6 +131,13 @@ td.user_email {
   cursor: none;
 }
 
+.error {
+  font-size: 10px;
+  padding-top: 5px;
+  color: red;
+  display: none;
+}
+
 .modal {
   position: fixed;
   display: none;
@@ -145,7 +152,11 @@ td.user_email {
 .alertBox {
   display: flex;
   flex-direction: column;
-  width: 350px;
+  justify-content: space-around;
+  gap: 10px;
+  padding: 10px;
+  align-items: center;
+  width: 400px;
   height: 100px;
   text-align: center;
   background-color: rgba(124, 124, 124, 0.855);
@@ -155,7 +166,6 @@ td.user_email {
 
 .alert__header {
   align-self: flex-start;
-  padding: 20px;
 }
 
 .fadeIn {

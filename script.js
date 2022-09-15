@@ -9,6 +9,7 @@ const userTable = document.querySelector(".table__user--body");
 const addNewUserButton = document.querySelector(".btn--add");
 const addNewUserRow = document.querySelector(".newUser");
 const inputFields = document.querySelectorAll(".newUser input");
+const errorFields = document.querySelectorAll(".error");
 const clearButton = document.querySelector(".btn--clear");
 const saveButton = document.querySelector(".btn--save");
 
@@ -241,10 +242,11 @@ const enableInputFields = () => {
 
 // Clears and disables all input fields when done editing
 const resetInputFields = () => {
-  inputFields.forEach((input) => {
+  inputFields.forEach((input, i) => {
     input.value = "";
     input.classList.add("disabled");
     input.style.border = "none";
+    errorFields[i].style.display = "none";
   });
 };
 
@@ -388,12 +390,16 @@ const regenDOM = () => {
 
 // Calling real time validation after 500ms of every keystroke
 const realTimeValidationCall = () => {
-  inputFields.forEach((input) =>
+  errorFields.forEach((error) => (error.innerHTML = languagePack[4].text));
+  inputFields.forEach((input) => {
     input.addEventListener("keyup", () => {
       setTimeout(() => {
         clearTimeout();
         validator(valid);
       }, 500);
-    })
-  );
+    });
+    input.addEventListener("blur", () => {
+      validator(valid);
+    });
+  });
 };

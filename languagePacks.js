@@ -23,6 +23,9 @@ export const languageChanger = (lang) => {
         message: "Egy vagy több beviteli érték nem felel meg az elvárásoknak!",
         color: "red",
       },
+      {
+        text: "A beviteli mező nem teljesíti a feltételeket!",
+      },
     ];
   } else if (lang === "hu") {
     return [
@@ -45,6 +48,9 @@ export const languageChanger = (lang) => {
         header: "ERROR",
         message: "One or more of your inputs do not match criteria!",
         color: "red",
+      },
+      {
+        text: "Input does not match criteria!",
       },
     ];
   }

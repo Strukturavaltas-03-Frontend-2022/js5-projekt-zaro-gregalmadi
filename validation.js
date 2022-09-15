@@ -1,6 +1,7 @@
 "use strict";
 
 const inputFields = document.querySelectorAll(".newUser input");
+const errorFields = document.querySelectorAll(".error");
 
 // Name, email and address validation
 export const validator = (valid) => {
@@ -20,19 +21,20 @@ export const validator = (valid) => {
     .toLowerCase()
     .match(addressRegExp);
 
-  !nameMatch
-    ? (inputFields[0].style.border = "2px solid red")
-    : (inputFields[0].style.border = "none");
-  !emailMatch
-    ? (inputFields[1].style.border = "2px solid red")
-    : (inputFields[1].style.border = "none");
-  !addressMatch
-    ? (inputFields[2].style.border = "2px solid red")
-    : (inputFields[2].style.border = "none");
+  const displayError = (id) => {
+    inputFields[id].style.border = "2px solid red";
+    errorFields[id].style.display = "block";
+  };
+  const hideError = (id) => {
+    inputFields[id].style.border = "none";
+    errorFields[id].style.display = "none";
+  };
 
-  if (nameMatch && emailMatch && addressMatch) {
-    valid = true;
-  }
+  !nameMatch ? displayError(0) : hideError(0);
+  !emailMatch ? displayError(1) : hideError(1);
+  !addressMatch ? displayError(2) : hideError(2);
+
+  nameMatch && emailMatch && addressMatch ? (valid = true) : null;
 
   return valid;
 };
