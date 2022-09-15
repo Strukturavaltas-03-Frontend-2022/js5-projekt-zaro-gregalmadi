@@ -7,9 +7,9 @@ const errorFields = document.querySelectorAll(".error");
 export const validator = (valid) => {
   valid = false;
 
-  const nameRegExp = /^(?=.{5,30}$)[a-záéíóúöőáüűé\-\s]+$/i;
-  const emailRegExp = /\S+@\S+\.\S+/i;
-  const addressRegExp = /\w\s\w/i;
+  const nameRegExp = /^\w+[\s\.\'\-]\w+([\s\.\'\-]*\w*)*$/;
+  const emailRegExp = /^\w+@\w+\.\w+$/i;
+  const addressRegExp = /^\d{1,5}\s\w+\s\w+$/i;
 
   const nameMatch = String(inputFields[0].value)
     .toLowerCase()
