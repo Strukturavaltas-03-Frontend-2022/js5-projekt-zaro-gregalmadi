@@ -42,6 +42,7 @@ export const updateUserData = async (url, options) => {
     if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
     const data = await response.json();
+    return data;
   } catch (err) {
     console.error(`Something went wrong fetching your request: ${err}`);
   }

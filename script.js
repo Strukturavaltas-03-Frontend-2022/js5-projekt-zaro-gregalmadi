@@ -34,7 +34,6 @@ let users;
 
 let createDOM;
 let userData = [];
-let updateData = {};
 let editing = false;
 let valid = false;
 let en = true;
@@ -44,11 +43,11 @@ let editedUserID;
 let editedUserRow;
 
 const url =
-  "https://js5-zaroprojekt-default-rtdb.europe-west1.firebasedatabase.app/users.json";
+  "https://js5-zaroprojekt-default-rtdb.europe-west1.firebasedatabase.app/users";
 
 // Fetching data from the server and rendering DOM based on fetched data
 (createDOM = async () => {
-  userData = await fetchUserData(url);
+  userData = await fetchUserData(`${url}.json`);
 
   userData.forEach((user, i) => {
     const userRow = document.createElement("tr");
@@ -95,14 +94,12 @@ const generateEventListeners = (i) => {
     updateOptions.body = "";
     updateOptions.method = "DELETE";
 
-    updateUserData(
-      `https://js5-zaroprojekt-default-rtdb.europe-west1.firebasedatabase.app/users/${userUniqueKey}.json`,
-      updateOptions
-    );
+    updateUserData(`${url}/${userUniqueKey}.json`, updateOptions);
   });
 
   editButton.addEventListener("click", () => {
     editing = true;
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
     editedUserRow = users[i];
     editedUserID = users[i].children[0].innerHTML;
@@ -146,8 +143,9 @@ clearButton.addEventListener("click", () => {
 });
 
 // Saving input fields for editing and adding new users
-saveButton.addEventListener("click", () => {
-  const id = userData[userData.length - 1].id + 1;
+saveButton.addEventListener("click", async () => {
+  let newID = 0;
+  userData.forEach((user) => (user.id > newID ? (newID = user.id) : null));
   const name = newName.value;
   const emailAddress = newEmail.value;
   const address = newAddress.value;
@@ -156,6 +154,7 @@ saveButton.addEventListener("click", () => {
 
   // Validating - input matches criteria
   if (valid) {
+    //------------------------------------------------------------------
     // If it's and edit request
     if (editing) {
       toggleAllEditButtons();
@@ -178,31 +177,27 @@ saveButton.addEventListener("click", () => {
         languagePack[1].message,
         languagePack[1].color
       );
-      // Updating backend server
-      updateServerData(userData);
+      // Updating database
+      updateOptions.method = "PUT";
+      updateOptions.body = JSON.stringify({
+        id: editedUser.id,
+        name: editedUser.name,
+        emailAddress: editedUser.emailAddress,
+        address: editedUser.address,
+      });
+      updateUserData(`${url}/${editedUser.uniqueKey}.json`, updateOptions);
     }
+    //------------------------------------------------------------------
     // If it's a new user request
     else {
-      // Generating unique key for new user
-      const generateUniqueKey = `-ZBCe6ZZ${Math.trunc(
-        Math.random() * 1000000000000
-      )}`;
-
-      // Pushing new user into user array
-      userData.push({
-        uniqueKey: generateUniqueKey,
-        id,
-        name,
-        emailAddress,
-        address,
-      });
-
       // Creating new user row
       const userRow = document.createElement("tr");
       userRow.classList.add("user");
       userTable.appendChild(userRow);
       userRow.innerHTML = `
-      <td class='user_id'>${id}</td> <td class='user_name'>${name}</td> <td class='user_email'>${emailAddress}</td> <td class='user_address'>${address}</td> <td class='buttons'><button class='btn--edit disabled'><i class="fa fa-pencil" aria-hidden="true"></i></button><button class='btn--delete disabled'><i class="fa fa-trash-o" aria-hidden="true"></i></button></td>
+      <td class='user_id'>${
+        newID + 1
+      }</td> <td class='user_name'>${name}</td> <td class='user_email'>${emailAddress}</td> <td class='user_address'>${address}</td> <td class='buttons'><button class='btn--edit disabled'><i class="fa fa-pencil" aria-hidden="true"></i></button><button class='btn--delete disabled'><i class="fa fa-trash-o" aria-hidden="true"></i></button></td>
       `;
 
       // Updating nodelists
@@ -211,13 +206,36 @@ saveButton.addEventListener("click", () => {
       users = document.querySelectorAll(".user");
 
       generateEventListeners(users.length - 1);
+      // Success alert for creating new user
       alertMessage(
         languagePack[0].header,
         languagePack[0].message,
         languagePack[0].color
       );
       toggleAllEditButtons();
-      updateServerData(userData);
+
+      // Updating database
+      updateOptions.method = "POST";
+      updateOptions.body = JSON.stringify({
+        id: newID + 1,
+        name,
+        emailAddress,
+        address,
+      });
+
+      const newUniqueKey = await updateUserData(`${url}.json`, updateOptions);
+
+      // Updating user array with newly generated uniqueKey
+      userData.push({
+        uniqueKey: newUniqueKey.name,
+        id: newID + 1,
+        name,
+        emailAddress,
+        address,
+      });
+
+      // Scroll to the new user row
+      window.scrollTo({ top: 100000, behavior: "smooth" });
     }
 
     resetInputFields();
@@ -225,6 +243,7 @@ saveButton.addEventListener("click", () => {
     saveButton.classList.add("disabled");
     addNewUserButton.classList.remove("disabled");
   } else {
+    // Validating - input does not match criteria
     alertMessage(
       languagePack[3].header,
       languagePack[3].message,
@@ -261,22 +280,6 @@ const toggleAllEditButtons = () => {
   });
 };
 
-// Updating package and uploading to server
-const updateServerData = (userData) => {
-  userData.forEach((user) => {
-    updateData[user.uniqueKey] = {
-      id: user.id,
-      name: user.name,
-      emailAddress: user.emailAddress,
-      address: user.address,
-    };
-  });
-
-  updateOptions.method = "PUT";
-  updateOptions.body = JSON.stringify(updateData);
-  updateUserData(url, updateOptions);
-};
-
 // Alerting update and error messages
 const alertMessage = (header, message, color) => {
   modal.style.display = "flex";
@@ -302,14 +305,14 @@ const alertMessage = (header, message, color) => {
   }, 5000);
 };
 
-// Language selector with flag icon - it only affects alert messages
+// Language selector with flag icon - only affects alert messages
 languageSetting.addEventListener("click", () => {
   if (en) {
-    languageSetting.setAttribute("src", "./assets/hu.png");
+    languageSetting.setAttribute("src", "./assets/en.png");
     languagePack = languageChanger("en");
     en = false;
   } else {
-    languageSetting.setAttribute("src", "./assets/en.png");
+    languageSetting.setAttribute("src", "./assets/hu.png");
     languagePack = languageChanger("hu");
     en = true;
   }
